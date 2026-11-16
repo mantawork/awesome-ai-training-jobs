@@ -1,0 +1,41 @@
+# Weekly refresh of README.md from mantawork.com (open roles and pay per
+# platform). Commits only when the list changed. Runs on this public repo's
+# free Actions minutes with its own GITHUB_TOKEN.
+name: Update list
+
+on:
+  schedule:
+    - cron: "17 1 * * 1" # Mondays 01:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-list
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the list
+        run: |
+          curl -fsS --retry 3 --retry-delay 10 -H "x-seoulstart-check: 1" \
+            -A "awesome-ai-training-jobs-update (+https://github.com/${GITHUB_REPOSITORY})" \
+            https://mantawork.com/ai-training-jobs/platforms/awesome.md -o README.new
+          # A good list is long and starts with its title; anything else keeps the old README.
+          head -1 README.new | grep -q '^# Awesome AI Training Jobs' || { echo "Unexpected content"; exit 1; }
+          [ "$(wc -c < README.new)" -gt 4000 ] || { echo "Too short"; exit 1; }
+          mv README.new README.md
+      - name: Commit if changed
+        run: |
+          # Only the date line changed: nothing to commit.
+          if git diff --quiet -I '^Updated weekly\. Last update:' -- README.md; then echo "No change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update list ($(date -u +%Y-%m-%d))"
+          git push
