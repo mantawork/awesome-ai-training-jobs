@@ -34,8 +34,8 @@ jobs:
         run: |
           # Only the date line changed: nothing to commit.
           if git diff --quiet -I '^Updated weekly\. Last update:' -- README.md; then echo "No change"; exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Howard Park"
+          git config user.email "107298953+hwajongpark@users.noreply.github.com"
           git add README.md
           git commit -m "Update list ($(date -u +%Y-%m-%d))"
           git push
